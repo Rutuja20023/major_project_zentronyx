@@ -1,0 +1,271 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-[#050914] text-slate-200 antialiased font-sans selection:bg-cyan-500/30 selection:text-cyan-200;
+  }
+}
+
+/* Custom visual utilities for cybersecurity platform */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.4) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-card:hover {
+  border-color: rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+}
+
+.glow-rose {
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
+}
+
+/* =========================================
+   ZENTRONYX SIGNATURE LOGO & BRAND ANIMATIONS
+========================================= */
+
+.logo-glow {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 200, 255, 0.25), transparent 70%);
+  filter: blur(12px);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.logo-svg {
+  width: 110px;
+  height: 110px;
+  position: relative;
+  z-index: 3;
+  overflow: visible;
+}
+
+.outer-frame {
+  fill: rgba(5, 15, 28, 0.85);
+  stroke: #19d5ff;
+  stroke-width: 2;
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+  animation:
+    drawFrame 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards,
+    frameGlow 3s ease-in-out 2s infinite alternate;
+}
+
+.shield {
+  fill: rgba(15, 20, 50, 0.45);
+  stroke: #765cff;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  animation: drawShield 1.2s ease-out 0.9s forwards;
+}
+
+.z-letter {
+  fill: none;
+  stroke: #16d9ff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  filter: drop-shadow(0 0 4px #00d9ff) drop-shadow(0 0 12px rgba(0, 217, 255, 0.6));
+  animation:
+    drawZ 1s cubic-bezier(0.65, 0, 0.35, 1) 1.9s forwards,
+    zPulse 3s ease-in-out 3s infinite;
+}
+
+.scan-line {
+  position: absolute;
+  z-index: 5;
+  left: 15px;
+  right: 15px;
+  top: 15px;
+  height: 2px;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, #00d9ff, #8b5cf6, #00d9ff, transparent);
+  box-shadow: 0 0 8px #00d9ff;
+  animation: scan 3.5s ease-in-out 3.2s infinite;
+}
+
+.scan-ring {
+  position: absolute;
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  opacity: 0;
+  animation: ringPulse 3s ease-out 3.5s infinite;
+}
+
+.brand-name span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(18px) scale(0.92);
+  filter: blur(5px);
+}
+
+.brand-name span:nth-child(1) { animation: letterReveal 0.65s 2.7s forwards; }
+.brand-name span:nth-child(2) { animation: letterReveal 0.65s 2.8s forwards; }
+.brand-name span:nth-child(3) { animation: letterReveal 0.65s 2.9s forwards; }
+.brand-name span:nth-child(4) { animation: letterReveal 0.65s 3.0s forwards; }
+.brand-name span:nth-child(5) { animation: letterReveal 0.65s 3.1s forwards; }
+.brand-name span:nth-child(6) { animation: letterReveal 0.65s 3.2s forwards; }
+.brand-name span:nth-child(7) { animation: letterReveal 0.65s 3.3s forwards; }
+.brand-name span:nth-child(8) { animation: letterReveal 0.65s 3.4s forwards; }
+.brand-name span:nth-child(9) { animation: letterReveal 0.65s 3.5s forwards; }
+
+.brand-line {
+  width: 0;
+  height: 1px;
+  margin-top: 9px;
+  background: linear-gradient(90deg, #00d9ff, #8b5cf6, transparent);
+  animation: lineReveal 1s ease-out 3.9s forwards;
+}
+
+.brand-subtitle {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: subtitleReveal 0.8s ease-out 4s forwards;
+}
+
+.instruction {
+  opacity: 0;
+  animation: instructionReveal 1s ease-out 4.5s forwards;
+}
+
+/* Keyframes */
+@keyframes drawFrame {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawShield {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes drawZ {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes frameGlow {
+  from {
+    filter: drop-shadow(0 0 3px rgba(0, 210, 255, 0.2));
+  }
+  to {
+    filter: drop-shadow(0 0 12px rgba(0, 210, 255, 0.45)) drop-shadow(0 0 24px rgba(100, 80, 255, 0.2));
+  }
+}
+
+@keyframes zPulse {
+  0%, 100% {
+    stroke: #20d9ff;
+    filter: drop-shadow(0 0 4px #00cfff) drop-shadow(0 0 10px rgba(0, 207, 255, 0.5));
+  }
+  50% {
+    stroke: #a855f7;
+    filter: drop-shadow(0 0 7px #8b5cf6) drop-shadow(0 0 20px rgba(139, 92, 246, 0.7));
+  }
+}
+
+@keyframes letterReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.92);
+    filter: blur(5px);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.02);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes lineReveal {
+  from { width: 0; }
+  to { width: 100%; max-width: 310px; }
+}
+
+@keyframes subtitleReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scan {
+  0% { top: 15px; opacity: 0; }
+  10% { opacity: 0.8; }
+  50% { opacity: 1; }
+  90% { opacity: 0.7; }
+  100% { top: 92px; opacity: 0; }
+}
+
+@keyframes ringPulse {
+  0% { transform: scale(0.7); opacity: 0; }
+  20% { opacity: 0.7; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes instructionReveal {
+  to { opacity: 1; }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .outer-frame,
+  .shield,
+  .z-letter,
+  .brand-name span,
+  .brand-line,
+  .brand-subtitle,
+  .instruction,
+  .scan-line,
+  .scan-ring {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    width: auto !important;
+  }
+}

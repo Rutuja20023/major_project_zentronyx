@@ -1,0 +1,854 @@
+/* =========================================
+   BASIC RESET
+========================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   PAGE
+========================================= */
+
+body {
+
+    width: 100%;
+    height: 100vh;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #111827 0%,
+            #080d16 45%,
+            #03060b 100%
+        );
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    color: white;
+}
+
+
+/* =========================================
+   MAIN PAGE
+========================================= */
+
+.page {
+
+    width: 100%;
+    height: 100vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    position: relative;
+}
+
+
+/* =========================================
+   LOGO + TEXT
+========================================= */
+
+.zentronyx-logo {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 24px;
+
+    cursor: pointer;
+
+    user-select: none;
+}
+
+
+/* =========================================
+   LOGO CONTAINER
+========================================= */
+
+.logo-container {
+
+    width: 110px;
+    height: 110px;
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+/* =========================================
+   LOGO GLOW
+========================================= */
+
+.logo-glow {
+
+    position: absolute;
+
+    width: 90px;
+    height: 90px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(0, 200, 255, 0.20),
+            transparent 70%
+        );
+
+    filter: blur(12px);
+
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+
+/* =========================================
+   SVG
+========================================= */
+
+.logo-svg {
+
+    width: 110px;
+    height: 110px;
+
+    position: relative;
+
+    z-index: 3;
+
+    overflow: visible;
+}
+
+
+/* =========================================
+   OUTER FRAME
+========================================= */
+
+.outer-frame {
+
+    fill: rgba(5, 15, 28, 0.8);
+
+    stroke: #19d5ff;
+
+    stroke-width: 2;
+
+    stroke-dasharray: 420;
+
+    stroke-dashoffset: 420;
+
+    animation:
+        drawFrame 1.5s
+        cubic-bezier(.65, 0, .35, 1)
+        forwards,
+
+        frameGlow 3s
+        ease-in-out
+        2s
+        infinite alternate;
+}
+
+
+/* =========================================
+   SHIELD
+========================================= */
+
+.shield {
+
+    fill: rgba(15, 20, 50, 0.45);
+
+    stroke: #765cff;
+
+    stroke-width: 2.5;
+
+    stroke-linejoin: round;
+
+    stroke-dasharray: 260;
+
+    stroke-dashoffset: 260;
+
+    animation:
+        drawShield 1.2s
+        ease-out
+        0.9s
+        forwards;
+}
+
+
+/* =========================================
+   Z LETTER
+========================================= */
+
+.z-letter {
+
+    fill: none;
+
+    stroke: #16d9ff;
+
+    stroke-width: 5;
+
+    stroke-linecap: round;
+
+    stroke-linejoin: round;
+
+    stroke-dasharray: 120;
+
+    stroke-dashoffset: 120;
+
+    filter:
+        drop-shadow(0 0 4px #00d9ff)
+        drop-shadow(0 0 12px rgba(0, 217, 255, 0.6));
+
+    animation:
+        drawZ 1s
+        cubic-bezier(.65, 0, .35, 1)
+        1.9s
+        forwards,
+
+        zPulse 3s
+        ease-in-out
+        3s
+        infinite;
+}
+
+
+/* =========================================
+   SCANNING LINE
+========================================= */
+
+.scan-line {
+
+    position: absolute;
+
+    z-index: 5;
+
+    left: 15px;
+    right: 15px;
+
+    top: 15px;
+
+    height: 2px;
+
+    opacity: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #00d9ff,
+            #8b5cf6,
+            #00d9ff,
+            transparent
+        );
+
+    box-shadow:
+        0 0 8px #00d9ff;
+
+    animation:
+        scan 3.5s
+        ease-in-out
+        3.2s
+        infinite;
+}
+
+
+/* =========================================
+   SCANNING RING
+========================================= */
+
+.scan-ring {
+
+    position: absolute;
+
+    width: 105px;
+    height: 105px;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(0, 210, 255, 0.3);
+
+    opacity: 0;
+
+    animation:
+        ringPulse 3s
+        ease-out
+        3.5s
+        infinite;
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.brand {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    min-width: 330px;
+}
+
+
+/* =========================================
+   ZENTRONYX TEXT
+========================================= */
+
+.brand-name {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 2px;
+
+    font-size: 38px;
+
+    font-weight: 800;
+
+    letter-spacing: 4px;
+
+    line-height: 1;
+
+    color: #eef8ff;
+
+    text-shadow:
+        0 0 10px rgba(50, 190, 255, 0.15);
+}
+
+
+/* =========================================
+   INDIVIDUAL LETTERS
+========================================= */
+
+.brand-name span {
+
+    display: inline-block;
+
+    opacity: 0;
+
+    transform:
+        translateY(18px)
+        scale(0.92);
+
+    filter: blur(5px);
+}
+
+
+/* =========================================
+   LETTER ANIMATIONS
+========================================= */
+
+.brand-name span:nth-child(1) {
+    animation: letterReveal 0.65s 2.7s forwards;
+}
+
+.brand-name span:nth-child(2) {
+    animation: letterReveal 0.65s 2.8s forwards;
+}
+
+.brand-name span:nth-child(3) {
+    animation: letterReveal 0.65s 2.9s forwards;
+}
+
+.brand-name span:nth-child(4) {
+    animation: letterReveal 0.65s 3s forwards;
+}
+
+.brand-name span:nth-child(5) {
+    animation: letterReveal 0.65s 3.1s forwards;
+}
+
+.brand-name span:nth-child(6) {
+    animation: letterReveal 0.65s 3.2s forwards;
+}
+
+.brand-name span:nth-child(7) {
+    animation: letterReveal 0.65s 3.3s forwards;
+}
+
+.brand-name span:nth-child(8) {
+    animation: letterReveal 0.65s 3.4s forwards;
+}
+
+.brand-name span:nth-child(9) {
+    animation: letterReveal 0.65s 3.5s forwards;
+}
+
+
+/* =========================================
+   BRAND LINE
+========================================= */
+
+.brand-line {
+
+    width: 0;
+
+    height: 1px;
+
+    margin-top: 9px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00d9ff,
+            #8b5cf6,
+            transparent
+        );
+
+    animation:
+        lineReveal 1s
+        ease-out
+        3.9s
+        forwards;
+}
+
+
+/* =========================================
+   SUBTITLE
+========================================= */
+
+.brand-subtitle {
+
+    margin-top: 9px;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    letter-spacing: 5px;
+
+    color: #36d9ff;
+
+    opacity: 0;
+
+    transform: translateY(8px);
+
+    animation:
+        subtitleReveal 0.8s
+        ease-out
+        4s
+        forwards;
+}
+
+
+/* =========================================
+   INSTRUCTION
+========================================= */
+
+.instruction {
+
+    position: absolute;
+
+    bottom: 35px;
+
+    font-size: 9px;
+
+    letter-spacing: 3px;
+
+    color: rgba(150, 190, 210, 0.4);
+
+    opacity: 0;
+
+    animation:
+        instructionReveal 1s
+        ease-out
+        4.5s
+        forwards;
+}
+
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+
+/* Frame */
+
+@keyframes drawFrame {
+
+    to {
+        stroke-dashoffset: 0;
+    }
+
+}
+
+
+/* Shield */
+
+@keyframes drawShield {
+
+    to {
+        stroke-dashoffset: 0;
+    }
+
+}
+
+
+/* Z */
+
+@keyframes drawZ {
+
+    to {
+        stroke-dashoffset: 0;
+    }
+
+}
+
+
+/* Glow */
+
+@keyframes glowPulse {
+
+    0%,
+    100% {
+
+        opacity: 0.45;
+
+        transform: scale(0.9);
+
+    }
+
+    50% {
+
+        opacity: 0.8;
+
+        transform: scale(1.08);
+
+    }
+
+}
+
+
+/* Frame glow */
+
+@keyframes frameGlow {
+
+    from {
+
+        filter:
+            drop-shadow(
+                0 0 3px
+                rgba(0, 210, 255, 0.2)
+            );
+
+    }
+
+    to {
+
+        filter:
+            drop-shadow(
+                0 0 12px
+                rgba(0, 210, 255, 0.45)
+            )
+            drop-shadow(
+                0 0 24px
+                rgba(100, 80, 255, 0.2)
+            );
+
+    }
+
+}
+
+
+/* Z pulse */
+
+@keyframes zPulse {
+
+    0%,
+    100% {
+
+        stroke: #20d9ff;
+
+        filter:
+            drop-shadow(0 0 4px #00cfff)
+            drop-shadow(
+                0 0 10px
+                rgba(0, 207, 255, 0.5)
+            );
+
+    }
+
+    50% {
+
+        stroke: #a855f7;
+
+        filter:
+            drop-shadow(0 0 7px #8b5cf6)
+            drop-shadow(
+                0 0 20px
+                rgba(139, 92, 246, 0.7)
+            );
+
+    }
+
+}
+
+
+/* Letters */
+
+@keyframes letterReveal {
+
+    0% {
+
+        opacity: 0;
+
+        transform:
+            translateY(18px)
+            scale(0.92);
+
+        filter: blur(5px);
+
+    }
+
+    70% {
+
+        opacity: 1;
+
+        transform:
+            translateY(-2px)
+            scale(1.02);
+
+        filter: blur(0);
+
+    }
+
+    100% {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+        filter: blur(0);
+
+    }
+
+}
+
+
+/* Line */
+
+@keyframes lineReveal {
+
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 310px;
+    }
+
+}
+
+
+/* Subtitle */
+
+@keyframes subtitleReveal {
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0);
+
+    }
+
+}
+
+
+/* Scanner */
+
+@keyframes scan {
+
+    0% {
+
+        top: 15px;
+
+        opacity: 0;
+
+    }
+
+    10% {
+
+        opacity: 0.8;
+
+    }
+
+    50% {
+
+        opacity: 1;
+
+    }
+
+    90% {
+
+        opacity: 0.7;
+
+    }
+
+    100% {
+
+        top: 92px;
+
+        opacity: 0;
+
+    }
+
+}
+
+
+/* Ring */
+
+@keyframes ringPulse {
+
+    0% {
+
+        transform: scale(0.7);
+
+        opacity: 0;
+
+    }
+
+    20% {
+
+        opacity: 0.7;
+
+    }
+
+    100% {
+
+        transform: scale(1.5);
+
+        opacity: 0;
+
+    }
+
+}
+
+
+/* Instruction */
+
+@keyframes instructionReveal {
+
+    to {
+
+        opacity: 1;
+
+    }
+
+}
+
+
+/* =========================================
+   REPLAY ANIMATION
+========================================= */
+
+.zentronyx-logo.replay .outer-frame {
+
+    animation:
+        drawFrame 1.5s
+        cubic-bezier(.65, 0, .35, 1)
+        forwards,
+
+        frameGlow 3s
+        ease-in-out
+        2s
+        infinite alternate;
+}
+
+
+.zentronyx-logo.replay .shield {
+
+    animation:
+        drawShield 1.2s
+        ease-out
+        0.9s
+        forwards;
+}
+
+
+.zentronyx-logo.replay .z-letter {
+
+    animation:
+        drawZ 1s
+        cubic-bezier(.65, 0, .35, 1)
+        1.9s
+        forwards,
+
+        zPulse 3s
+        ease-in-out
+        3s
+        infinite;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+
+    .zentronyx-logo {
+
+        flex-direction: column;
+
+        gap: 18px;
+
+    }
+
+    .brand {
+
+        min-width: auto;
+
+        align-items: center;
+
+    }
+
+    .brand-name {
+
+        font-size: 28px;
+
+        letter-spacing: 3px;
+
+    }
+
+    .brand-subtitle {
+
+        font-size: 8px;
+
+        letter-spacing: 4px;
+
+    }
+
+    .brand-line {
+
+        width: 250px !important;
+
+    }
+
+}
