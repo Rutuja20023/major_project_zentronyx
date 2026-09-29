@@ -9,6 +9,7 @@ import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { formatDate } from '../lib/dateUtils';
 import {
   FolderGit2,
   Plus,
@@ -207,7 +208,7 @@ export const Projects: React.FC = () => {
                 <div className="flex items-center justify-between text-slate-500 text-[11px] font-mono pt-1">
                   <span className="flex items-center space-x-1">
                     <Calendar className="w-3 h-3" />
-                    <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                    <span>{formatDate(project.created_at)}</span>
                   </span>
                   <span className="text-cyan-400 font-semibold uppercase">{project.status}</span>
                 </div>

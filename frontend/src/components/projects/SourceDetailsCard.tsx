@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Source, AcquisitionStatus } from '../../types/source.types';
 import { Button } from '../common/Button';
+import { formatDateTime } from '../../lib/dateUtils';
 
 interface SourceDetailsCardProps {
   source: Source;
@@ -143,9 +144,7 @@ export const SourceDetailsCard: React.FC<SourceDetailsCardProps> = ({ source, on
             <span>Acquired At</span>
           </span>
           <span className="font-mono text-slate-200 text-xs">
-            {source.acquired_at
-              ? new Date(source.acquired_at).toLocaleString()
-              : new Date(source.created_at).toLocaleString()}
+            {formatDateTime(source.acquired_at || source.created_at)}
           </span>
         </div>
       </div>

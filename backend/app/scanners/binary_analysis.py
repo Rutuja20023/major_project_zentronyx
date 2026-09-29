@@ -91,7 +91,7 @@ class BinaryAnalysisModule(SecurityModule):
                         FindingData(
                             title=f"High Shannon Entropy Section ({bin_file.name})",
                             description=f"Binary {rel_path} exhibits entropy score of {features.get('overall_entropy')} (suggests packing or encryption).",
-                            severity=FindingSeverity.MEDIUM,
+                            severity=FindingSeverity.HIGH if features.get("overall_entropy", 0.0) > 7.6 else FindingSeverity.MEDIUM,
                             confidence=FindingConfidence.HIGH,
                             category="Binary Security / Entropy",
                             file=rel_path,
@@ -101,6 +101,26 @@ class BinaryAnalysisModule(SecurityModule):
                             rule_id="BIN-HARD-ENTROPY-002",
                             recommendation="Inspect binary for runtime packers (UPX) or obfuscation wrappers.",
                             raw_metadata={"entropy": features.get("overall_entropy")}
+                        )
+                    )
+
+                # Mitigation 3: Suspicious Process Control & Injection Imports
+                susp_imports = features.get("imports", [])
+                if susp_imports:
+                    findings.append(
+                        FindingData(
+                            title=f"Suspicious Process Injection & Execution APIs ({bin_file.name})",
+                            description=f"Binary {rel_path} statically references suspicious low-level process control or memory manipulation APIs: {', '.join(susp_imports[:8])}.",
+                            severity=FindingSeverity.HIGH,
+                            confidence=FindingConfidence.HIGH,
+                            category="Binary Security / Injection APIs",
+                            file=rel_path,
+                            line=1,
+                            column=1,
+                            scanner="Binary Hardening Engine",
+                            rule_id="BIN-SUSP-IMPORT-003",
+                            recommendation="Verify dynamic library linkage and ensure binary does not execute memory injection or process hollowing.",
+                            raw_metadata={"imports": susp_imports}
                         )
                     )
 

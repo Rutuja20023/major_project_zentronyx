@@ -250,6 +250,85 @@
   to { opacity: 1; }
 }
 
+/* =========================================
+   SECURITY SCAN PIPELINE FLOW ANIMATIONS
+========================================= */
+
+@keyframes flowLaser {
+  0% { transform: translateX(-100%); opacity: 0; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateX(250%); opacity: 0; }
+}
+
+@keyframes flowLaserVertical {
+  0% { transform: translateY(-100%); opacity: 0; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateY(250%); opacity: 0; }
+}
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cyberPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 12px rgba(0, 240, 255, 0.05);
+    border-color: rgba(0, 240, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(0, 240, 255, 0.45), inset 0 0 20px rgba(0, 240, 255, 0.12);
+    border-color: rgba(0, 240, 255, 0.85);
+  }
+}
+
+@keyframes pulseEmerald {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
+    border-color: rgba(16, 185, 129, 0.8);
+  }
+}
+
+@keyframes progressShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes terminalCursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-flow-laser {
+  animation: flowLaser 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-flow-laser-vertical {
+  animation: flowLaserVertical 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-radar {
+  animation: radarSweep 2.2s linear infinite;
+}
+
+.glow-cyber-active {
+  animation: cyberPulse 2s ease-in-out infinite;
+}
+
+.glow-emerald-active {
+  animation: pulseEmerald 2.5s ease-in-out infinite;
+}
+
+.terminal-cursor {
+  animation: terminalCursor 1s step-end infinite;
+}
+
 /* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
   .outer-frame,
@@ -260,7 +339,12 @@
   .brand-subtitle,
   .instruction,
   .scan-line,
-  .scan-ring {
+  .scan-ring,
+  .animate-flow-laser,
+  .animate-flow-laser-vertical,
+  .animate-radar,
+  .glow-cyber-active,
+  .glow-emerald-active {
     animation: none !important;
     stroke-dashoffset: 0 !important;
     opacity: 1 !important;

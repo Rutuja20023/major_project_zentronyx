@@ -17,7 +17,7 @@ if IS_SQLITE:
     async_engine = create_async_engine(
         async_db_url,
         echo=False,
-        connect_args={"check_same_thread": False}
+        connect_args={"check_same_thread": False, "timeout": 60.0}
     )
 else:
     async_engine = create_async_engine(
@@ -39,9 +39,31 @@ AsyncSessionLocal = async_sessionmaker(
 # Sync Engine for Alembic migrations and sync scripts
 sync_db_url = settings.SYNC_DATABASE_URL
 if IS_SQLITE:
-    sync_engine = create_engine(settings.DATABASE_URL.replace("sqlite+aiosqlite://", "sqlite://"), connect_args={"check_same_thread": False})
+    sync_engine = create_engine(
+        settings.DATABASE_URL.replace("sqlite+aiosqlite://", "sqlite://"),
+        connect_args={"check_same_thread": False, "timeout": 60.0}
+    )
 else:
     sync_engine = create_engine(sync_db_url, pool_pre_ping=True)
+
+if IS_SQLITE:
+    from sqlalchemy import event
+
+    @event.listens_for(async_engine.sync_engine, "connect")
+    def set_sqlite_async_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA busy_timeout=60000")
+        cursor.close()
+
+    @event.listens_for(sync_engine, "connect")
+    def set_sqlite_sync_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA busy_timeout=60000")
+        cursor.close()
 
 SyncSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
 

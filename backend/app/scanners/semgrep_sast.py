@@ -150,9 +150,32 @@ class SemgrepSASTModule(SecurityModule):
              "Unsafe Object Deserialization via pickle", "Unpickling untrusted data can lead to arbitrary code execution.", FindingSeverity.HIGH, "CWE-502: Deserialization of Untrusted Data", "Use safe serialization formats like JSON or Protocol Buffers."),
             (re.compile(r"(?i)yaml\.load\s*\([^,)]+\)(?!\s*,\s*Loader\s*=\s*yaml\.SafeLoader)"),
              "Unsafe YAML Deserialization", "yaml.load called without SafeLoader allows arbitrary Python object instantiation.", FindingSeverity.HIGH, "CWE-502: Insecure Deserialization", "Use yaml.safe_load() or specify Loader=yaml.SafeLoader."),
+            # Malicious Backdoor / Reverse Shell Patterns
+            (re.compile(r"(?i)(?:nc\s+-(?:e|c)|/bin/(?:ba)?sh\s+-i|bash\s+-i\s+>&|pty\.spawn\s*\(\s*['\"]/(?:bin/)?(?:ba)?sh)"),
+             "Malicious Reverse Shell / Interactive Spawn", "Reverse shell or interactive shell spawn command detected in code.", FindingSeverity.CRITICAL, "CWE-78: OS Command Injection", "Remove unauthorized interactive shell commands and inspect artifact provenance."),
+            # Web Shell & Command Execution Backdoors
+            (re.compile(r"(?i)(?:system|passthru|shell_exec|popen)\s*\(\s*\$_(?:GET|POST|REQUEST|COOKIE)\["),
+             "Web Shell Command Execution Backdoor", "Direct unvalidated execution of HTTP request parameter as operating system command.", FindingSeverity.CRITICAL, "CWE-78: Command Injection / Web Shell", "Remove suspicious web shell backdoor immediately."),
+            (re.compile(r"(?i)eval\s*\(\s*(?:base64_decode|gzinflate|str_rot13)\s*\("),
+             "Obfuscated Payload / Web Shell Evaluator", "Dynamic evaluation of base64/compressed payload commonly used in malware droppers and web shells.", FindingSeverity.CRITICAL, "CWE-95: Code Injection / Obfuscation", "De-obfuscate payload and remove malicious backdoor."),
+            # Malicious PowerShell & Download Cradle
+            (re.compile(r"(?i)(?:Invoke-Expression|IEX)\s*\(.*?(?:New-Object|Net\.WebClient|DownloadString)"),
+             "Malicious PowerShell Download Cradle", "In-memory download and execution of remote payload using PowerShell WebClient.", FindingSeverity.CRITICAL, "CWE-829: Untrusted Download Cradle", "Block untrusted remote download cradles and investigate staging hosts."),
+            (re.compile(r"(?i)powershell(?:\.exe)?\s+.*-(?:enc|encodedcommand)\s+[A-Za-z0-9+/=]{20,}"),
+             "Encoded PowerShell Execution", "Base64 encoded PowerShell execution pattern typically used for defense evasion.", FindingSeverity.CRITICAL, "CWE-114: Process Control / Defense Evasion", "Decode encoded command and verify legitimacy."),
+            # Ransomware & Shadow Copy Destruction
+            (re.compile(r"(?i)vssadmin(?:\.exe)?\s+delete\s+shadows|bcdedit(?:\.exe)?\s+/set.*?(?:ignoreallfailures|recoveryenabled\s+no)"),
+             "Ransomware / Shadow Copy Destruction Command", "Command destructive to volume shadow copies and system recovery commonly executed by ransomware.", FindingSeverity.CRITICAL, "CWE-284: Ransomware System Sabotage", "Quarantine file immediately and inspect host integrity."),
+            # Memory Injection & Process Hollowing APIs
+            (re.compile(r"(?i)(?:VirtualAllocEx|WriteProcessMemory|CreateRemoteThread|SetWindowsHookEx[AW]?)\b"),
+             "Suspicious Process Memory Injection API", "Low-level Windows API invocation associated with DLL injection, process hollowing, or keylogging.", FindingSeverity.HIGH, "CWE-114: Process Injection / Memory Manipulation", "Verify authorization for dynamic memory allocation and process injection."),
         ]
 
-        text_extensions = {".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".php", ".rb", ".c", ".cpp", ".h", ".json", ".yaml", ".yml", ".env"}
+        text_extensions = {
+            ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".php",
+            ".rb", ".c", ".cpp", ".h", ".json", ".yaml", ".yml", ".env",
+            ".sh", ".bash", ".bat", ".cmd", ".ps1", ".vbs", ".hta", ".pl", ".cgi"
+        }
 
         for root, _, files in os.walk(source_path):
             for file_name in files:

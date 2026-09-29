@@ -4,6 +4,7 @@ import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { User, Mail, Shield, Key, LogOut, Calendar } from 'lucide-react';
+import { formatDate } from '../lib/dateUtils';
 
 export const Profile: React.FC = () => {
   const { user, token, logout } = useAuth();
@@ -64,7 +65,7 @@ export const Profile: React.FC = () => {
             <div>
               <div className="text-[11px] font-mono text-slate-500 uppercase">Member Since</div>
               <div className="text-sm font-semibold text-slate-200">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                {formatDate(user?.created_at)}
               </div>
             </div>
           </div>

@@ -1,8 +1,10 @@
 import uuid
 from enum import Enum as PyEnum
-from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Text, JSON, Integer, Float, Boolean, Enum
+from datetime import datetime, timezone
+from sqlalchemy import Column, String, Text, JSON, Integer, Float, Boolean, Enum
 from app.core.database import Base
+from app.models.base import UTCDateTime
+
 
 
 class PolicyDecision(str, PyEnum):
@@ -32,8 +34,8 @@ class SecurityPolicy(Base):
     block_on_dast_critical = Column(Boolean, default=True)
     block_on_critical_sca = Column(Boolean, default=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(UTCDateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(UTCDateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
 class PolicyEvaluation(Base):
@@ -48,4 +50,4 @@ class PolicyEvaluation(Base):
     reasons = Column(JSON, nullable=True)
     rule_violations = Column(JSON, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(UTCDateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

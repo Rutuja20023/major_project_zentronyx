@@ -34,6 +34,7 @@ import { reportService } from '../services/report.service';
 import { Project } from '../types/project.types';
 import { Scan, ScanStatus, FindingSeverity } from '../types/scan.types';
 import { useToast } from '../context/ToastContext';
+import { formatDateTime } from '../lib/dateUtils';
 
 export const ComplianceReports: React.FC = () => {
   const { showToast } = useToast();
@@ -503,7 +504,7 @@ export const ComplianceReports: React.FC = () => {
                       </td>
 
                       <td className="p-3.5 text-slate-400 font-mono text-[11px]">
-                        {new Date(scan.created_at).toLocaleString()}
+                        {formatDateTime(scan.created_at)}
                       </td>
 
                       <td className="p-3.5 text-right">
@@ -588,7 +589,7 @@ export const ComplianceReports: React.FC = () => {
                   </div>
                   <p className="text-xs text-slate-400 font-mono">
                     Scan ID: {activeReportModal.scanId} &bull; Generated:{' '}
-                    {new Date(activeReportModal.data.generated_at).toLocaleString()}
+                    {formatDateTime(activeReportModal.data.generated_at)}
                   </p>
                 </div>
               </div>

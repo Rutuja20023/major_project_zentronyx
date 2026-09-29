@@ -34,6 +34,14 @@ class BinaryFeatureExtractor:
                 return True, "ELF"
             elif header.startswith(b"MZ"):
                 return True, "PE"
+            elif header.startswith(b"\xfe\xed\xfa\xce") or header.startswith(b"\xcf\xfa\xed\xfe") or header.startswith(b"\xca\xfe\xba\xbe"):
+                return True, "MACHO"
+
+            # Check binary extensions for samples with non-standard/packed headers
+            binary_exts = {".exe", ".dll", ".bin", ".sys", ".scr", ".com", ".elf", ".so", ".dylib", ".out"}
+            if file_path.suffix.lower() in binary_exts:
+                if b"\x00" in header:
+                    return True, "PE" if file_path.suffix.lower() in {".exe", ".dll", ".sys", ".scr", ".com"} else "ELF"
         except Exception as e:
             logger.error(f"Error reading magic bytes from {file_path}: {str(e)}")
 
@@ -155,12 +163,17 @@ class BinaryFeatureExtractor:
                         raw_size = int.from_bytes(file_bytes[sec_off+16:sec_off+20], "little")
                         characteristics = int.from_bytes(file_bytes[sec_off+36:sec_off+40], "little")
 
+                        is_exec = bool(characteristics & 0x20000000)
+                        is_read = bool(characteristics & 0x40000000)
+                        is_write = bool(characteristics & 0x80000000)
+                        perm = (4 if is_read else 0) | (2 if is_write else 0) | (1 if is_exec else 0)
+
                         sec_data = file_bytes[raw_off:raw_off + min(raw_size, 65536)] if raw_off < len(file_bytes) else b""
                         sections.append({
                             "name": name or f".sec_{i}",
                             "size": raw_size,
                             "entropy": BinaryFeatureExtractor.calculate_entropy(sec_data),
-                            "permissions": 7 if (characteristics & 0x20000000) else 5
+                            "permissions": perm if perm > 0 else (7 if is_exec else 5)
                         })
         return sections
 

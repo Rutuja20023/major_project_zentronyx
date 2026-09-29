@@ -158,7 +158,7 @@ class ScanOrchestratorEngine:
                     scan_module = module_db_map[mod_type]
                     timeout = plan.timeouts.get(mod_type, 120)
                     tasks.append(
-                        self._run_single_module_with_db(bg_db, scan_id, scan_module, mod_type, context, timeout)
+                        self._run_single_module_with_db(scan_id, scan_module.id, mod_type, context, timeout)
                     )
 
                 if tasks:
@@ -184,7 +184,7 @@ class ScanOrchestratorEngine:
 
                 # Determine final scan state
                 modules_list = await scan_repo.get_scan_modules(scan_id)
-                has_failed_modules = any(m.status == ModuleStatus.FAILED.value for m in modules_list)
+                has_failed_modules = any(m.status in (ModuleStatus.FAILED.value, ModuleStatus.TIMEOUT.value) for m in modules_list)
 
                 final_status = ScanStatus.COMPLETED_WITH_ERRORS if has_failed_modules else ScanStatus.COMPLETED
 
@@ -214,95 +214,109 @@ class ScanOrchestratorEngine:
 
     async def _run_single_module_with_db(
         self,
-        db: AsyncSession,
         scan_id: str,
-        scan_module: ScanModule,
+        scan_module_id: str,
         mod_type: ModuleType,
         context: Dict[str, Any],
         timeout_seconds: int
     ):
-        scan_repo = ScanRepository(db)
+        from app.core.database import AsyncSessionLocal
+
         start_time = time.time()
         module_impl = self.registry.get_module(mod_type)
 
         if not module_impl:
             try:
-                mod = await scan_repo.get_module_by_id(scan_module.id)
-                if mod:
-                    await scan_repo.update_scan_module(
-                        mod,
-                        status=ModuleStatus.FAILED,
-                        error_message=f"Module implementation not registered for {mod_type.value}"
-                    )
+                async with AsyncSessionLocal() as db:
+                    scan_repo = ScanRepository(db)
+                    mod = await scan_repo.get_module_by_id(scan_module_id)
+                    if mod:
+                        await scan_repo.update_scan_module(
+                            mod,
+                            status=ModuleStatus.FAILED,
+                            error_message=f"Module implementation not registered for {mod_type.value}"
+                        )
             except Exception:
                 pass
             return
 
         try:
-            # Re-fetch module object safely
-            mod = await scan_repo.get_module_by_id(scan_module.id)
-            if mod:
-                await scan_repo.update_scan_module(mod, status=ModuleStatus.RUNNING)
+            # Re-fetch module object safely in isolated session
+            async with AsyncSessionLocal() as db:
+                scan_repo = ScanRepository(db)
+                mod = await scan_repo.get_module_by_id(scan_module_id)
+                if mod:
+                    await scan_repo.update_scan_module(mod, status=ModuleStatus.RUNNING)
 
             # Validate & Prepare
             if not await module_impl.validate(context) or not await module_impl.prepare(context):
-                mod = await scan_repo.get_module_by_id(scan_module.id)
-                if mod:
-                    await scan_repo.update_scan_module(
-                        mod,
-                        status=ModuleStatus.FAILED,
-                        error_message="Module validation or preparation check failed."
-                    )
+                async with AsyncSessionLocal() as db:
+                    scan_repo = ScanRepository(db)
+                    mod = await scan_repo.get_module_by_id(scan_module_id)
+                    if mod:
+                        await scan_repo.update_scan_module(
+                            mod,
+                            status=ModuleStatus.FAILED,
+                            error_message="Module validation or preparation check failed."
+                        )
                 return
 
             # Execute module with timeout protection
             findings = await asyncio.wait_for(module_impl.execute(context), timeout=timeout_seconds)
             exec_time_ms = int((time.time() - start_time) * 1000)
 
-            # Save normalized findings to DB
-            if findings:
-                await scan_repo.save_findings(scan_id, scan_module.id, mod_type, findings)
+            # Save normalized findings to DB in isolated session
+            async with AsyncSessionLocal() as db:
+                scan_repo = ScanRepository(db)
+                if findings:
+                    await scan_repo.save_findings(scan_id, scan_module_id, mod_type, findings)
 
-            mod = await scan_repo.get_module_by_id(scan_module.id)
-            if mod:
-                await scan_repo.update_scan_module(
-                    mod,
-                    status=ModuleStatus.COMPLETED,
-                    findings_count=len(findings),
-                    execution_time_ms=exec_time_ms
-                )
+                mod = await scan_repo.get_module_by_id(scan_module_id)
+                if mod:
+                    await scan_repo.update_scan_module(
+                        mod,
+                        status=ModuleStatus.COMPLETED,
+                        findings_count=len(findings),
+                        execution_time_ms=exec_time_ms
+                    )
 
         except asyncio.TimeoutError:
             exec_time_ms = int((time.time() - start_time) * 1000)
             logger.warning(f"Module {mod_type.value} timed out after {timeout_seconds}s")
             try:
-                mod = await scan_repo.get_module_by_id(scan_module.id)
-                if mod:
-                    await scan_repo.update_scan_module(
-                        mod,
-                        status=ModuleStatus.TIMEOUT,
-                        execution_time_ms=exec_time_ms,
-                        error_message=f"Module execution timed out after {timeout_seconds} seconds."
-                    )
+                async with AsyncSessionLocal() as db:
+                    scan_repo = ScanRepository(db)
+                    mod = await scan_repo.get_module_by_id(scan_module_id)
+                    if mod:
+                        await scan_repo.update_scan_module(
+                            mod,
+                            status=ModuleStatus.TIMEOUT,
+                            execution_time_ms=exec_time_ms,
+                            error_message=f"Module execution timed out after {timeout_seconds} seconds."
+                        )
             except Exception:
                 pass
         except Exception as e:
             exec_time_ms = int((time.time() - start_time) * 1000)
             logger.error(f"Module {mod_type.value} execution error: {str(e)}")
             try:
-                mod = await scan_repo.get_module_by_id(scan_module.id)
-                if mod:
-                    await scan_repo.update_scan_module(
-                        mod,
-                        status=ModuleStatus.FAILED,
-                        execution_time_ms=exec_time_ms,
-                        error_message=str(e)
-                    )
+                async with AsyncSessionLocal() as db:
+                    scan_repo = ScanRepository(db)
+                    mod = await scan_repo.get_module_by_id(scan_module_id)
+                    if mod:
+                        await scan_repo.update_scan_module(
+                            mod,
+                            status=ModuleStatus.FAILED,
+                            execution_time_ms=exec_time_ms,
+                            error_message=str(e)
+                        )
             except Exception:
                 pass
         finally:
             try:
                 await module_impl.cleanup()
+            except Exception:
+                pass
             except Exception:
                 pass
 

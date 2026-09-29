@@ -1,0 +1,35 @@
+{
+  "model_name": "Zentronyx-DeepMalwareGNN",
+  "architecture": "3-Layer GCN + Graph Readout Pooling + MLP",
+  "in_features": 8,
+  "hidden_dim": 64,
+  "num_classes": 2,
+  "trained_epochs": 25,
+  "dataset_info": {
+    "total_samples": 300,
+    "train_samples": 240,
+    "val_samples": 30,
+    "test_samples": 30,
+    "class_distribution": {
+      "benign": 150,
+      "malware": 150
+    }
+  },
+  "evaluation_metrics": {
+    "accuracy": 0.6,
+    "precision": 0.5714,
+    "recall": 0.8,
+    "f1_score": 0.6667,
+    "roc_auc": 0.6267,
+    "confusion_matrix": {
+      "TP": 12,
+      "FP": 9,
+      "TN": 6,
+      "FN": 3
+    }
+  },
+  "training_time_seconds": 130.86,
+  "model_version": "2.0.0-gnn-gcn-pytorch",
+  "feature_schema_version": "1.0.0",
+  "timestamp": "2026-09-01 10:09:29 UTC"
+}

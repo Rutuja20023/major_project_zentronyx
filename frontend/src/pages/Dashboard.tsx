@@ -8,6 +8,7 @@ import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { formatDate } from '../lib/dateUtils';
 import {
   ShieldCheck,
   FolderGit2,
@@ -230,7 +231,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-3">
                     <Badge riskLevel={p.risk_level} />
-                    <span className="text-xs text-slate-500 font-mono">{new Date(p.created_at).toLocaleDateString()}</span>
+                    <span className="text-xs text-slate-500 font-mono">{formatDate(p.created_at)}</span>
                   </div>
                 </div>
               ))}

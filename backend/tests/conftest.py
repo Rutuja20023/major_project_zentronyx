@@ -82,7 +82,7 @@ async def admin_user(db_session: AsyncSession) -> User:
 
 
 @pytest.fixture
-def auth_headers(test_user: User) -> dict:
+async def auth_headers(test_user: User) -> dict:
     token = create_access_token(data={
         "sub": test_user.id,
         "username": test_user.username,
@@ -92,7 +92,7 @@ def auth_headers(test_user: User) -> dict:
 
 
 @pytest.fixture
-def admin_auth_headers(admin_user: User) -> dict:
+async def admin_auth_headers(admin_user: User) -> dict:
     token = create_access_token(data={
         "sub": admin_user.id,
         "username": admin_user.username,

@@ -45,13 +45,16 @@ class ProcessExecutor:
         bin_name = cmd[0]
         resolved_bin = shutil.which(bin_name)
         if not resolved_bin:
-            venv_dir = Path(sys.executable).parent
-            candidate_exe = venv_dir / f"{bin_name}.exe"
-            candidate_raw = venv_dir / bin_name
-            if candidate_exe.exists():
-                resolved_bin = str(candidate_exe)
-            elif candidate_raw.exists():
-                resolved_bin = str(candidate_raw)
+            candidates = [
+                Path(sys.executable).parent / f"{bin_name}.exe",
+                Path(sys.executable).parent / bin_name,
+                Path(__file__).resolve().parent.parent.parent / "venv" / "Scripts" / f"{bin_name}.exe",
+                Path(__file__).resolve().parent.parent.parent / "venv" / "Scripts" / bin_name,
+            ]
+            for cand in candidates:
+                if cand.exists():
+                    resolved_bin = str(cand)
+                    break
 
         executed_cmd = list(cmd)
         if resolved_bin:

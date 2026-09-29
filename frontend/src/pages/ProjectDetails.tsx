@@ -324,6 +324,7 @@ export const ProjectDetails: React.FC = () => {
       {activeScan && (
         <ScanProgressCard
           scan={activeScan}
+          projectName={project?.name}
           onRefresh={async () => {
             const updatedScans = await scanService.getProjectScans(project.id);
             setScans(updatedScans);
@@ -331,6 +332,8 @@ export const ProjectDetails: React.FC = () => {
               handleSelectScanResults(updatedScans[0].id);
             }
           }}
+          onViewFindings={() => handleSelectScanResults(activeScan.id)}
+          onDownloadPdf={handleDownloadPdf}
         />
       )}
 
@@ -455,11 +458,16 @@ export const ProjectDetails: React.FC = () => {
           isOpen={isScanPlanModalOpen}
           onClose={() => setIsScanPlanModalOpen(false)}
           projectId={projectId}
+          projectName={project?.name}
           analysis={analysis}
           onScanCreated={(newScan) => {
             setScans((prev) => [newScan, ...prev]);
             setSelectedScanId(newScan.id);
           }}
+          onViewFindings={(newScan) => {
+            handleSelectScanResults(newScan.id);
+          }}
+          onDownloadPdf={handleDownloadPdf}
         />
       )}
 

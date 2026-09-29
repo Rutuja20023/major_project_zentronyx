@@ -21,6 +21,7 @@ import { ScanPlanModal } from '../components/scans/ScanPlanModal';
 import { FindingExplorer } from '../components/findings/FindingExplorer';
 import { ScanProgressCard } from '../components/scans/ScanProgressCard';
 import { useToast } from '../context/ToastContext';
+import { formatDateTime } from '../lib/dateUtils';
 
 export const SecurityScans: React.FC = () => {
   const { showToast } = useToast();
@@ -291,7 +292,10 @@ export const SecurityScans: React.FC = () => {
                 <ScanProgressCard
                   key={activeScan.id}
                   scan={activeScan}
+                  projectName={activeScan.projectName}
                   onRefresh={fetchAllData}
+                  onViewFindings={() => handleViewResults(activeScan)}
+                  onDownloadPdf={() => handleDownloadPdf(activeScan.id, activeScan.projectName)}
                 />
               ))}
           </div>
@@ -399,7 +403,7 @@ export const SecurityScans: React.FC = () => {
                       </td>
 
                       <td className="p-3 text-slate-400 text-[11px]">
-                        {new Date(scan.created_at).toLocaleString()}
+                        {formatDateTime(scan.created_at)}
                       </td>
 
                       <td className="p-3 text-right">
@@ -475,9 +479,19 @@ export const SecurityScans: React.FC = () => {
         <ScanPlanModal
           isOpen={showPlanModal}
           projectId={targetProjectForModal.id}
+          projectName={targetProjectForModal.name}
           analysis={null}
           onClose={() => setShowPlanModal(false)}
-          onScanCreated={handleScanStarted}
+          onScanCreated={() => {
+            fetchAllData();
+          }}
+          onViewFindings={(scan) => {
+            setShowPlanModal(false);
+            handleViewResults({ ...scan, projectName: targetProjectForModal.name });
+          }}
+          onDownloadPdf={(scanId) => {
+            handleDownloadPdf(scanId, targetProjectForModal.name);
+          }}
         />
       )}
     </div>

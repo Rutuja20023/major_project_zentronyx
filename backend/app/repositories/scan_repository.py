@@ -166,6 +166,20 @@ class ScanRepository:
         await self.db.commit()
         return db_results
 
+    async def get_module_by_id(self, module_id: str) -> Optional[ScanModule]:
+        result = await self.db.execute(
+            select(ScanModule).where(ScanModule.id == module_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_module_by_type(self, scan_id: str, module_type: ModuleType) -> Optional[ScanModule]:
+        result = await self.db.execute(
+            select(ScanModule).where(
+                and_(ScanModule.scan_id == scan_id, ScanModule.module_type == module_type.value)
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def get_scan_modules(self, scan_id: str) -> List[ScanModule]:
         result = await self.db.execute(
             select(ScanModule).where(ScanModule.scan_id == scan_id)

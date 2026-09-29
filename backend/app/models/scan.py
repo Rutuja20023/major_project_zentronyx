@@ -1,9 +1,9 @@
 import enum
 from datetime import datetime
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
-from sqlalchemy import String, Integer, Text, DateTime, Enum, JSON, ForeignKey
+from sqlalchemy import String, Integer, Text, Enum, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.base import BaseDBModel
+from app.models.base import BaseDBModel, UTCDateTime
 
 if TYPE_CHECKING:
     from app.models.project import Project
@@ -79,8 +79,8 @@ class Scan(BaseDBModel):
     )
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(timezone=True), nullable=True)
+    finished_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(timezone=True), nullable=True)
 
     # Relationships
     project: Mapped["Project"] = relationship("Project", back_populates="scans")
@@ -109,8 +109,8 @@ class ScanModule(BaseDBModel):
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     execution_time_ms: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(timezone=True), nullable=True)
+    finished_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(timezone=True), nullable=True)
 
     # Relationships
     scan: Mapped["Scan"] = relationship("Scan", back_populates="modules")
@@ -156,8 +156,8 @@ class ScanResult(BaseDBModel):
         String(50), default=FindingLifecycleStatus.OPEN.value, nullable=False, index=True
     )
     fingerprint: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
-    first_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    last_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    first_seen_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(timezone=True), nullable=True)
+    last_seen_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(timezone=True), nullable=True)
 
     # Relationships
     scan: Mapped["Scan"] = relationship("Scan", back_populates="results")

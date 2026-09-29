@@ -1,9 +1,9 @@
 import enum
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import String, Text, Integer, DateTime, Enum, ForeignKey
+from sqlalchemy import String, Text, Integer, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.base import BaseDBModel
+from app.models.base import BaseDBModel, UTCDateTime
 
 if TYPE_CHECKING:
     from app.models.project import Project
@@ -45,7 +45,7 @@ class Source(BaseDBModel):
         nullable=False
     )
     file_size: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    acquired_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    acquired_at: Mapped[Optional[datetime]] = mapped_column(UTCDateTime(timezone=True), nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Relationships
