@@ -105,12 +105,12 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       {/* Main Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Risk Score */}
-        <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1">
+        <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2">
           <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
             Overall Risk Score
           </span>
           <div className="flex items-baseline justify-between pt-1">
-            <span className="text-2xl font-black font-mono text-cyan-400">{riskScore} / 100</span>
+            <span className="text-2xl font-black font-mono text-cyan-400">{riskScore} <span className="text-sm text-slate-400 font-normal">/ 100</span></span>
             <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold font-mono ${
               riskLevel === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
               riskLevel === 'HIGH' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
@@ -119,6 +119,18 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
             }`}>
               {riskLevel}
             </span>
+          </div>
+          {/* Risk Progress Bar */}
+          <div className="w-full bg-slate-800 rounded-full h-1.5 mt-1">
+            <div
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                riskLevel === 'CRITICAL' ? 'bg-rose-500' :
+                riskLevel === 'HIGH' ? 'bg-amber-500' :
+                riskLevel === 'MEDIUM' ? 'bg-yellow-500' :
+                'bg-emerald-500'
+              }`}
+              style={{ width: `${Math.min(riskScore, 100)}%` }}
+            />
           </div>
         </div>
 

@@ -108,9 +108,14 @@ class OSVScannerSCAModule(SecurityModule):
         queries: List[Dict[str, Any]] = []
         query_meta: List[Dict[str, str]] = []
 
-        # Look for manifest files in workspace
+        # Look for manifest files ONLY inside the uploaded source workspace, not the project root
         candidate_manifests = list(manifests) if manifests else []
-        for root, _, files in os.walk(source_path):
+        for root, dirs, files in os.walk(source_path):
+            # Skip node_modules, venv, .git directories to avoid scanning project internals
+            dirs[:] = [d for d in dirs if d not in (
+                'node_modules', 'venv', '.venv', 'env', '.git', '__pycache__',
+                '.tox', 'dist', 'build', '.eggs', 'site-packages'
+            )]
             for fname in files:
                 if fname in ("requirements.txt", "package.json", "package-lock.json", "go.mod", "pom.xml", "Cargo.toml", "Cargo.lock"):
                     rel = str(Path(root) / fname)

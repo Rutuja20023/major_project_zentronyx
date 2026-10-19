@@ -53,6 +53,7 @@ export const ProjectDetails: React.FC = () => {
   const [scans, setScans] = useState<Scan[]>([]);
   const [selectedScanResults, setSelectedScanResults] = useState<ScanResult[]>([]);
   const [selectedScanId, setSelectedScanId] = useState<string | null>(null);
+  const [policyDecision, setPolicyDecision] = useState<'PASS' | 'WARN' | 'BLOCK'>('PASS');
 
   const [loading, setLoading] = useState<boolean>(true);
   const [analyzing, setAnalyzing] = useState<boolean>(false);
@@ -106,6 +107,14 @@ export const ProjectDetails: React.FC = () => {
         setSelectedScanId(latestScan.id);
         const results = await scanService.getScanResults(latestScan.id);
         setSelectedScanResults(results);
+        // Derive policy decision from severity summary
+        const sev = latestScan.severity_summary as Record<string, number> || {};
+        const crit = sev['CRITICAL'] || 0;
+        const high = sev['HIGH'] || 0;
+        const med = sev['MEDIUM'] || 0;
+        if (crit > 0) setPolicyDecision('BLOCK');
+        else if (high > 3 || med > 5) setPolicyDecision('WARN');
+        else setPolicyDecision('PASS');
       }
     } catch (err: any) {
       console.error('Failed to load project workspace:', err);
@@ -138,6 +147,16 @@ export const ProjectDetails: React.FC = () => {
       setSelectedScanId(scanId);
       const results = await scanService.getScanResults(scanId);
       setSelectedScanResults(results);
+      const scan = scans.find((s) => s.id === scanId);
+      if (scan) {
+        const sev = scan.severity_summary as Record<string, number> || {};
+        const crit = sev['CRITICAL'] || 0;
+        const high = sev['HIGH'] || 0;
+        const med = sev['MEDIUM'] || 0;
+        if (crit > 0) setPolicyDecision('BLOCK');
+        else if (high > 3 || med > 5) setPolicyDecision('WARN');
+        else setPolicyDecision('PASS');
+      }
     } catch (err) {
       console.error('Failed to load scan findings:', err);
     }
@@ -316,6 +335,7 @@ export const ProjectDetails: React.FC = () => {
           riskScore={project.risk_score}
           riskLevel={project.risk_level}
           severitySummary={selectedScan.severity_summary}
+          policyDecision={policyDecision}
           onDownloadPdf={handleDownloadPdf}
         />
       )}

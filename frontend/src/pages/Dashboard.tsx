@@ -49,9 +49,11 @@ export const Dashboard: React.FC = () => {
     return <LoadingSpinner label="Loading Zentronyx dashboard..." />;
   }
 
-  const avgRisk = projects.length > 0
-    ? (projects.reduce((sum, p) => sum + (p.risk_score || 0), 0) / projects.length).toFixed(1)
+  const scannedProjects = projects.filter((p) => (p.risk_score || 0) > 0);
+  const avgRisk = scannedProjects.length > 0
+    ? (scannedProjects.reduce((sum, p) => sum + (p.risk_score || 0), 0) / scannedProjects.length).toFixed(1)
     : '0.0';
+  const highRiskCount = projects.filter((p) => p.risk_level === 'CRITICAL' || p.risk_level === 'HIGH').length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -112,13 +114,13 @@ export const Dashboard: React.FC = () => {
 
         <Card glow="emerald">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400 font-mono uppercase">Platform Risk Status</span>
+            <span className="text-xs font-medium text-slate-400 font-mono uppercase">Avg Risk Score</span>
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
           </div>
           <div className="text-3xl font-bold text-emerald-400 mt-3 font-mono">
-            {avgRisk} <span className="text-xs text-slate-400 font-normal">/ 10.0</span>
+            {avgRisk} <span className="text-xs text-slate-400 font-normal">/ 100</span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">Aggregated risk metric</p>
+          <p className="text-xs text-slate-500 mt-1">{highRiskCount} project(s) at HIGH or CRITICAL</p>
         </Card>
 
         <Card glow="amber">

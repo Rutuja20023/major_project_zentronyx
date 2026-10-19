@@ -63,36 +63,39 @@ class BinaryAnalysisModule(SecurityModule):
                 fmt = features.get("format", "ELF")
                 sections = features.get("sections", [])
 
-                has_rwx = any(sec.get("permissions", 0) >= 6 for sec in sections)
-                high_entropy = features.get("overall_entropy", 0.0) > 7.2
+                # Only flag RWX if BOTH executable AND writable bits are set (perm == 7 means rwx)
+                has_rwx = any(sec.get("permissions", 0) == 7 for sec in sections)
+                # Only flag entropy above 7.6 (packed/encrypted), not normal compiled code
+                overall_entropy = features.get("overall_entropy", 0.0)
+                high_entropy = overall_entropy > 7.6
 
-                # Mitigation 1: NX / DEP Check
+                # Mitigation 1: NX / DEP Check — only flag true RWX (perm=7), not normal R-X (perm=5)
                 if has_rwx:
                     findings.append(
                         FindingData(
                             title=f"Missing NX/DEP Protection in Binary ({bin_file.name})",
-                            description=f"Binary segment in {rel_path} has executable & writable (RWX) section permissions.",
-                            severity=FindingSeverity.HIGH,
-                            confidence=FindingConfidence.HIGH,
+                            description=f"Binary segment in {rel_path} has executable & writable (RWX) section permissions, indicating missing DEP/NX stack protection.",
+                            severity=FindingSeverity.MEDIUM,
+                            confidence=FindingConfidence.MEDIUM,
                             category="Binary Security / Hardening",
                             file=rel_path,
                             line=1,
                             column=1,
                             scanner="Binary Hardening Engine",
                             rule_id="BIN-HARD-NX-001",
-                            recommendation="Compile binary with -z noexecstack and remove executable stack permissions.",
+                            recommendation="Compile binary with -z noexecstack and enable DEP/NX via linker flags.",
                             raw_metadata={"format": fmt, "has_rwx": True}
                         )
                     )
 
-                # Mitigation 2: High Entropy / Packing Check
+                # Mitigation 2: High Entropy — only flag above 7.6 (strong indicator of packing)
                 if high_entropy:
                     findings.append(
                         FindingData(
                             title=f"High Shannon Entropy Section ({bin_file.name})",
-                            description=f"Binary {rel_path} exhibits entropy score of {features.get('overall_entropy')} (suggests packing or encryption).",
-                            severity=FindingSeverity.HIGH if features.get("overall_entropy", 0.0) > 7.6 else FindingSeverity.MEDIUM,
-                            confidence=FindingConfidence.HIGH,
+                            description=f"Binary {rel_path} exhibits entropy score of {overall_entropy:.2f} (threshold: 7.6), suggesting runtime packing or encryption.",
+                            severity=FindingSeverity.MEDIUM,
+                            confidence=FindingConfidence.MEDIUM,
                             category="Binary Security / Entropy",
                             file=rel_path,
                             line=1,
@@ -100,26 +103,27 @@ class BinaryAnalysisModule(SecurityModule):
                             scanner="Binary Hardening Engine",
                             rule_id="BIN-HARD-ENTROPY-002",
                             recommendation="Inspect binary for runtime packers (UPX) or obfuscation wrappers.",
-                            raw_metadata={"entropy": features.get("overall_entropy")}
+                            raw_metadata={"entropy": overall_entropy}
                         )
                     )
 
-                # Mitigation 3: Suspicious Process Control & Injection Imports
-                susp_imports = features.get("imports", [])
+                # Mitigation 3: Suspicious imports — only flag dangerous memory injection APIs
+                dangerous_apis = ["virtualalloc", "writeprocessmemory", "createremotethread"]
+                susp_imports = [s for s in features.get("imports", []) if any(d in s.lower() for d in dangerous_apis)]
                 if susp_imports:
                     findings.append(
                         FindingData(
-                            title=f"Suspicious Process Injection & Execution APIs ({bin_file.name})",
-                            description=f"Binary {rel_path} statically references suspicious low-level process control or memory manipulation APIs: {', '.join(susp_imports[:8])}.",
+                            title=f"Suspicious Memory Injection APIs ({bin_file.name})",
+                            description=f"Binary {rel_path} references memory injection APIs: {', '.join(susp_imports[:5])}.",
                             severity=FindingSeverity.HIGH,
-                            confidence=FindingConfidence.HIGH,
+                            confidence=FindingConfidence.MEDIUM,
                             category="Binary Security / Injection APIs",
                             file=rel_path,
                             line=1,
                             column=1,
                             scanner="Binary Hardening Engine",
                             rule_id="BIN-SUSP-IMPORT-003",
-                            recommendation="Verify dynamic library linkage and ensure binary does not execute memory injection or process hollowing.",
+                            recommendation="Verify these API calls are intentional and not injected by malware.",
                             raw_metadata={"imports": susp_imports}
                         )
                     )

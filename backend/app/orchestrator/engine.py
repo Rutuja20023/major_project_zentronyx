@@ -182,6 +182,9 @@ class ScanOrchestratorEngine:
                     if sev in severity_counts:
                         severity_counts[sev] += 1
 
+                # Risk score only uses actionable findings — exclude INFO
+                risk_severity_counts = {k: v for k, v in severity_counts.items() if k != "INFO"}
+
                 # Determine final scan state
                 modules_list = await scan_repo.get_scan_modules(scan_id)
                 has_failed_modules = any(m.status in (ModuleStatus.FAILED.value, ModuleStatus.TIMEOUT.value) for m in modules_list)
@@ -197,8 +200,8 @@ class ScanOrchestratorEngine:
                         findings_count=total_findings
                     )
 
-                # Update Project Risk Score
-                await self._update_project_risk_with_db(bg_db, project_id, severity_counts)
+                # Update Project Risk Score (exclude INFO from risk calculation)
+                await self._update_project_risk_with_db(bg_db, project_id, risk_severity_counts)
 
                 logger.info(f"Scan {scan_id} finished with status {final_status.value}. Total findings: {total_findings}")
 
@@ -326,24 +329,8 @@ class ScanOrchestratorEngine:
         if not project:
             return
 
-        crit = severity_counts.get("CRITICAL", 0)
-        high = severity_counts.get("HIGH", 0)
-        med = severity_counts.get("MEDIUM", 0)
-        low = severity_counts.get("LOW", 0)
-
-        # Calculate risk score (0.0 - 100.0)
-        score = min(100.0, round((crit * 25.0) + (high * 15.0) + (med * 5.0) + (low * 1.0), 1))
-        if crit > 0 or score >= 75.0:
-            level = RiskLevel.CRITICAL
-        elif high > 0 or score >= 50.0:
-            level = RiskLevel.HIGH
-        elif med > 0 or score >= 25.0:
-            level = RiskLevel.MEDIUM
-        elif low > 0 or score > 0.0:
-            level = RiskLevel.LOW
-        else:
-            level = RiskLevel.LOW if score == 0.0 else RiskLevel.UNKNOWN
-
+        from app.core.risk_engine import RiskEngine
+        score, level, _ = RiskEngine.calculate_risk_score(severity_counts)
         project.risk_score = score
         project.risk_level = level
         await db.commit()
@@ -467,24 +454,8 @@ class ScanOrchestratorEngine:
         if not project:
             return
 
-        crit = severity_counts.get("CRITICAL", 0)
-        high = severity_counts.get("HIGH", 0)
-        med = severity_counts.get("MEDIUM", 0)
-        low = severity_counts.get("LOW", 0)
-
-        # Calculate risk score (0.0 - 100.0)
-        score = min(100.0, round((crit * 25.0) + (high * 15.0) + (med * 5.0) + (low * 1.0), 1))
-        if crit > 0 or score >= 75.0:
-            level = RiskLevel.CRITICAL
-        elif high > 0 or score >= 50.0:
-            level = RiskLevel.HIGH
-        elif med > 0 or score >= 25.0:
-            level = RiskLevel.MEDIUM
-        elif low > 0 or score > 0.0:
-            level = RiskLevel.LOW
-        else:
-            level = RiskLevel.LOW if score == 0.0 else RiskLevel.UNKNOWN
-
+        from app.core.risk_engine import RiskEngine
+        score, level, _ = RiskEngine.calculate_risk_score(severity_counts)
         project.risk_score = score
         project.risk_level = level
         await self.db.commit()
