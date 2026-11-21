@@ -10,7 +10,7 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    plan: free
+    plan: starter
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -46,7 +46,7 @@ services:
     runtime: docker
     dockerfilePath: ./ai-service/Dockerfile
     dockerContext: ./ai-service
-    plan: free
+    plan: starter
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -56,7 +56,6 @@ services:
     runtime: static
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/dist
-    plan: free
     routes:
       - type: rewrite
         source: /*
