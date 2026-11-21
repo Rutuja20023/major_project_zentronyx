@@ -320,8 +320,6 @@ class ScanOrchestratorEngine:
                 await module_impl.cleanup()
             except Exception:
                 pass
-            except Exception:
-                pass
 
     async def _update_project_risk_with_db(self, db: AsyncSession, project_id: str, severity_counts: Dict[str, int]):
         project_repo = ProjectRepository(db)

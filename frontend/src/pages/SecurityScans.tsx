@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ShieldAlert,
+  ShieldCheck,
   Play,
   CheckCircle2,
   AlertTriangle,
@@ -151,6 +152,24 @@ export const SecurityScans: React.FC = () => {
   const completedScansCount = scans.filter((s) => s.status === ScanStatus.COMPLETED).length;
   const totalFindings = scans.reduce((acc, s) => acc + (s.findings_count || 0), 0);
 
+  const getScanRiskScore = (scan: Scan) => {
+    const sev = (scan.severity_summary as Record<string, number>) || { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, INFO: 0 };
+    const raw = (sev.CRITICAL || 0) * 30 + (sev.HIGH || 0) * 15 + (sev.MEDIUM || 0) * 5 + (sev.LOW || 0) * 1;
+    return Math.min(100, Math.round(raw * 100) / 100);
+  };
+
+  const getScanRiskLevel = (score: number) => {
+    if (score >= 75) return 'CRITICAL';
+    if (score >= 50) return 'HIGH';
+    if (score >= 25) return 'MEDIUM';
+    return 'LOW';
+  };
+
+  const completedScansList = scans.filter((s) => s.status === ScanStatus.COMPLETED);
+  const avgScanRiskScore = completedScansList.length > 0
+    ? (completedScansList.reduce((acc, s) => acc + getScanRiskScore(s), 0) / completedScansList.length).toFixed(1)
+    : '0.0';
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -189,7 +208,7 @@ export const SecurityScans: React.FC = () => {
       </div>
 
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2">
           <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
             <span>TOTAL SCANS</span>
@@ -197,6 +216,17 @@ export const SecurityScans: React.FC = () => {
           </div>
           <div className="text-2xl font-bold text-slate-100 font-mono">{scans.length}</div>
           <div className="text-[11px] text-slate-500">Recorded scan runs across projects</div>
+        </div>
+
+        <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
+            <span>AVG RISK SCORE</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="text-2xl font-bold text-emerald-400 font-mono">
+            {avgScanRiskScore} <span className="text-xs text-slate-400 font-normal">/ 100</span>
+          </div>
+          <div className="text-[11px] text-slate-500">Mean risk across completed scans</div>
         </div>
 
         <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2">
@@ -219,7 +249,7 @@ export const SecurityScans: React.FC = () => {
 
         <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2">
           <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>TOTAL FINDINGS DETECTED</span>
+            <span>TOTAL FINDINGS</span>
             <AlertTriangle className="w-4 h-4 text-rose-400" />
           </div>
           <div className="text-2xl font-bold text-rose-400 font-mono">{totalFindings}</div>
@@ -330,6 +360,7 @@ export const SecurityScans: React.FC = () => {
                   <th className="p-3">Status</th>
                   <th className="p-3">Findings</th>
                   <th className="p-3">Severity Breakdown</th>
+                  <th className="p-3">Overall Risk Score</th>
                   <th className="p-3">Execution Time</th>
                   <th className="p-3">Started At</th>
                   <th className="p-3 text-right">Actions</th>
@@ -394,6 +425,36 @@ export const SecurityScans: React.FC = () => {
                         </div>
                       </td>
 
+                      <td className="p-3 font-mono">
+                        {isCompleted ? (() => {
+                          const score = getScanRiskScore(scan);
+                          const level = getScanRiskLevel(score);
+                          return (
+                            <div className="flex items-center space-x-1.5">
+                              <span className="font-bold text-slate-100">{score}</span>
+                              <span className="text-[10px] text-slate-500 font-normal">/ 100</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                  level === 'CRITICAL'
+                                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                                    : level === 'HIGH'
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                    : level === 'MEDIUM'
+                                    ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                }`}
+                              >
+                                {level}
+                              </span>
+                            </div>
+                          );
+                        })() : isRunning ? (
+                          <span className="text-amber-400 text-[11px] animate-pulse">Calculating...</span>
+                        ) : (
+                          <span className="text-slate-500 text-[11px]">N/A</span>
+                        )}
+                      </td>
+
                       <td className="p-3 font-mono text-slate-400">
                         {scan.started_at && scan.finished_at
                           ? `${Math.round((new Date(scan.finished_at).getTime() - new Date(scan.started_at).getTime()) / 1000)}s`
@@ -454,10 +515,37 @@ export const SecurityScans: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
               <div>
-                <h3 className="text-sm font-bold text-slate-100 font-mono">
-                  Findings for {selectedScanResults.projectName}
-                </h3>
-                <p className="text-xs text-slate-400">Scan ID: {selectedScanResults.scanId}</p>
+                <div className="flex items-center space-x-3">
+                  <h3 className="text-sm font-bold text-slate-100 font-mono">
+                    Findings for {selectedScanResults.projectName}
+                  </h3>
+                  {(() => {
+                    const drawerScan = scans.find((s) => s.id === selectedScanResults.scanId);
+                    if (drawerScan && drawerScan.status === ScanStatus.COMPLETED) {
+                      const score = getScanRiskScore(drawerScan);
+                      const level = getScanRiskLevel(score);
+                      return (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-900 text-cyan-400 border border-slate-800 flex items-center space-x-1.5">
+                          <span>Risk Score:</span>
+                          <span className="text-slate-100">{score}</span>
+                          <span className="text-slate-500 font-normal">/ 100</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[9px] uppercase ${
+                              level === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300' :
+                              level === 'HIGH' ? 'bg-amber-500/20 text-amber-300' :
+                              level === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-300' :
+                              'bg-emerald-500/20 text-emerald-300'
+                            }`}
+                          >
+                            {level}
+                          </span>
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">Scan ID: {selectedScanResults.scanId}</p>
               </div>
               <button
                 onClick={() => setSelectedScanResults(null)}

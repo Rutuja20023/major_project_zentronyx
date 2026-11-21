@@ -103,6 +103,15 @@ export const Vulnerabilities: React.FC = () => {
   const medCount = results.filter((r) => r.severity === FindingSeverity.MEDIUM).length;
   const lowCount = results.filter((r) => r.severity === FindingSeverity.LOW || r.severity === FindingSeverity.INFO).length;
 
+  const currentRiskScore = Math.min(
+    100,
+    Math.round(((critCount * 30) + (highCount * 15) + (medCount * 5) + (lowCount * 1)) * 100) / 100
+  );
+  const currentRiskLevel =
+    currentRiskScore >= 75 ? 'CRITICAL' :
+    currentRiskScore >= 50 ? 'HIGH' :
+    currentRiskScore >= 25 ? 'MEDIUM' : 'LOW';
+
   const handleUpdateFindingStatus = (findingId: string, newStatus: string) => {
     setResults((prev) =>
       prev.map((r) => {
@@ -157,7 +166,7 @@ export const Vulnerabilities: React.FC = () => {
       </div>
 
       {/* Severity Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div
           onClick={() => setSelectedSeverity(selectedSeverity === 'CRITICAL' ? 'ALL' : 'CRITICAL')}
           className={`p-4 rounded-xl border transition-all cursor-pointer ${
@@ -220,6 +229,38 @@ export const Vulnerabilities: React.FC = () => {
           </div>
           <div className="text-2xl font-bold text-cyan-300 font-mono mt-1">{lowCount}</div>
           <div className="text-[10px] text-slate-500 mt-1">Informational advisory</div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/90 space-y-1">
+          <div className="flex items-center justify-between text-cyan-400 text-xs font-mono font-bold">
+            <span>OVERALL RISK SCORE</span>
+            <ShieldAlert className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div className="flex items-baseline space-x-1.5 pt-1">
+            <span className="text-2xl font-bold font-mono text-slate-100">{currentRiskScore}</span>
+            <span className="text-xs text-slate-500 font-mono">/ 100</span>
+            <span
+              className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono uppercase ml-auto ${
+                currentRiskLevel === 'CRITICAL' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+                currentRiskLevel === 'HIGH' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                currentRiskLevel === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              }`}
+            >
+              {currentRiskLevel}
+            </span>
+          </div>
+          <div className="w-full bg-slate-950 rounded-full h-1.5 mt-2 overflow-hidden border border-slate-800">
+            <div
+              className={`h-full transition-all duration-300 ${
+                currentRiskLevel === 'CRITICAL' ? 'bg-rose-500' :
+                currentRiskLevel === 'HIGH' ? 'bg-amber-500' :
+                currentRiskLevel === 'MEDIUM' ? 'bg-yellow-500' :
+                'bg-emerald-500'
+              }`}
+              style={{ width: `${Math.min(currentRiskScore, 100)}%` }}
+            />
+          </div>
         </div>
       </div>
 

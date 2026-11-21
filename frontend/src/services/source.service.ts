@@ -19,6 +19,25 @@ export const sourceService = {
     });
   },
 
+  async uploadFolderSource(
+    projectId: string,
+    files: File[],
+    folderName: string = 'source_folder'
+  ): Promise<Source> {
+    const formData = new FormData();
+    formData.append('folder_name', folderName);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const relPath = (file as any).webkitRelativePath || file.name;
+      formData.append('files', file);
+      formData.append('paths', relPath);
+    }
+    return apiFetch<Source>(`/projects/${projectId}/sources/folder`, {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
   async ingestGitHubSource(projectId: string, payload: GitHubIngestPayload): Promise<Source> {
     return apiFetch<Source>(`/projects/${projectId}/sources/github`, {
       method: 'POST',

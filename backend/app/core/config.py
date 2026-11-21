@@ -22,6 +22,19 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://zentronyx_user:zentronyx_secure_password_change_in_prod@localhost:5432/zentronyx_db"
     SYNC_DATABASE_URL: str = "postgresql://zentronyx_user:zentronyx_secure_password_change_in_prod@localhost:5432/zentronyx_db"
 
+    @field_validator("DATABASE_URL", mode="before")
+    def fix_async_db_url(cls, v: str) -> str:
+        # Render provides postgres:// — convert to postgresql+asyncpg://
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        return v
+
+    @field_validator("SYNC_DATABASE_URL", mode="before")
+    def fix_sync_db_url(cls, v: str) -> str:
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
+
     # JWT Authentication
     JWT_SECRET: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
     JWT_ALGORITHM: str = "HS256"
@@ -50,7 +63,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "https://*.onrender.com"
     ]
 
     @field_validator("CORS_ORIGINS", mode="before")

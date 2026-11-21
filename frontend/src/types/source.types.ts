@@ -1,6 +1,7 @@
 export enum SourceType {
   ZIP = 'ZIP',
   GITHUB = 'GITHUB',
+  FOLDER = 'FOLDER',
 }
 
 export enum AcquisitionStatus {

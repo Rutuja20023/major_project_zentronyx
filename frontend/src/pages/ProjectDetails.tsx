@@ -266,6 +266,11 @@ export const ProjectDetails: React.FC = () => {
             <div>
               <div className="flex items-center space-x-3">
                 <h1 className="text-xl font-bold text-slate-100">{project.name}</h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-950 text-cyan-400 border border-slate-800 flex items-center space-x-1">
+                  <span className="text-slate-400 font-normal">Risk Score:</span>
+                  <span className="text-cyan-300">{project.risk_score ?? 0}</span>
+                  <span className="text-slate-500 font-normal">/ 100</span>
+                </span>
                 <Badge riskLevel={project.risk_level} />
               </div>
               <p className="text-xs text-slate-400 font-mono mt-0.5">UUID: {project.id}</p>
@@ -328,15 +333,37 @@ export const ProjectDetails: React.FC = () => {
       </div>
 
       {/* Executive Security Risk Dashboard */}
-      {selectedScan && (
+      {selectedScan ? (
         <SecurityDashboard
           projectId={project.id}
           scanId={selectedScan.id}
-          riskScore={project.risk_score}
-          riskLevel={project.risk_level}
+          riskScore={(() => {
+            if (selectedScan && selectedScan.severity_summary) {
+              const sev = selectedScan.severity_summary as Record<string, number>;
+              const raw = (sev.CRITICAL || 0) * 30 + (sev.HIGH || 0) * 15 + (sev.MEDIUM || 0) * 5 + (sev.LOW || 0) * 1;
+              return Math.min(100, Math.round(raw * 100) / 100);
+            }
+            return project.risk_score;
+          })()}
+          riskLevel={(() => {
+            if (selectedScan && selectedScan.severity_summary) {
+              const sev = selectedScan.severity_summary as Record<string, number>;
+              const raw = (sev.CRITICAL || 0) * 30 + (sev.HIGH || 0) * 15 + (sev.MEDIUM || 0) * 5 + (sev.LOW || 0) * 1;
+              const s = Math.min(100, raw);
+              return s >= 75 ? 'CRITICAL' : s >= 50 ? 'HIGH' : s >= 25 ? 'MEDIUM' : 'LOW';
+            }
+            return project.risk_level;
+          })()}
           severitySummary={selectedScan.severity_summary}
           policyDecision={policyDecision}
           onDownloadPdf={handleDownloadPdf}
+        />
+      ) : (
+        <SecurityDashboard
+          projectId={project.id}
+          riskScore={project.risk_score}
+          riskLevel={project.risk_level}
+          policyDecision="PASS"
         />
       )}
 

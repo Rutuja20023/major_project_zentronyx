@@ -201,3 +201,54 @@ async def test_readonly_git_objects_cleanup(client: AsyncClient, auth_headers):
     WorkspaceService.cleanup_source_dir(proj_id)
     assert not subdirs["source"].exists() or not list(subdirs["source"].iterdir())
 
+
+@pytest.mark.asyncio
+async def test_folder_upload_success(client: AsyncClient, auth_headers):
+    proj_res = await client.post("/api/v1/projects", json={"name": "Folder Upload Test"}, headers=auth_headers)
+    proj_id = proj_res.json()["id"]
+
+    files = [
+        ("files", ("index.js", b"console.log('hello folder');", "application/javascript")),
+        ("files", ("config.json", b"{\"name\": \"test\"}", "application/json")),
+        ("paths", (None, "src/index.js")),
+        ("paths", (None, "config.json")),
+        ("folder_name", (None, "my_app")),
+    ]
+
+    upload_res = await client.post(
+        f"/api/v1/projects/{proj_id}/sources/folder",
+        files=files,
+        headers=auth_headers
+    )
+    assert upload_res.status_code == 201
+    source_data = upload_res.json()
+    assert source_data["source_type"] == "FOLDER"
+    assert source_data["acquisition_status"] == "READY"
+    assert source_data["original_filename"] == "my_app"
+    assert source_data["source_fingerprint"] is not None
+
+    workspace_source = WorkspaceService.get_project_workspace_root(proj_id) / "source"
+    assert (workspace_source / "src" / "index.js").exists()
+    assert (workspace_source / "config.json").exists()
+    assert (workspace_source / "src" / "index.js").read_bytes() == b"console.log('hello folder');"
+
+
+@pytest.mark.asyncio
+async def test_folder_upload_traversal_protection(client: AsyncClient, auth_headers):
+    proj_res = await client.post("/api/v1/projects", json={"name": "Folder Traversal Test"}, headers=auth_headers)
+    proj_id = proj_res.json()["id"]
+
+    files = [
+        ("files", ("escape.py", b"pwned", "text/plain")),
+        ("paths", (None, "../../outside.py")),
+        ("folder_name", (None, "evil_folder")),
+    ]
+
+    upload_res = await client.post(
+        f"/api/v1/projects/{proj_id}/sources/folder",
+        files=files,
+        headers=auth_headers
+    )
+    assert upload_res.status_code == 400
+    assert "Path traversal" in upload_res.json()["detail"]
+

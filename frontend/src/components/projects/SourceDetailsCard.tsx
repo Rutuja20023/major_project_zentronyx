@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   FileArchive,
+  Folder,
   Github,
   GitBranch,
   GitCommit,
@@ -68,6 +69,8 @@ export const SourceDetailsCard: React.FC<SourceDetailsCardProps> = ({ source, on
           <div className="p-2.5 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400">
             {source.source_type === 'GITHUB' ? (
               <Github className="w-5 h-5" />
+            ) : source.source_type === 'FOLDER' ? (
+              <Folder className="w-5 h-5" />
             ) : (
               <FileArchive className="w-5 h-5" />
             )}

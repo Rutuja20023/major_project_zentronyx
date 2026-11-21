@@ -176,7 +176,10 @@ export const Projects: React.FC = () => {
                       {project.name}
                     </h3>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs font-mono font-bold text-cyan-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                      {project.risk_score ?? 0} <span className="text-[10px] text-slate-500 font-normal">/ 100</span>
+                    </span>
                     <Badge riskLevel={project.risk_level} />
                     <button
                       type="button"
@@ -193,9 +196,28 @@ export const Projects: React.FC = () => {
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-400 line-clamp-2 mb-4 h-8">
+                <p className="text-xs text-slate-400 line-clamp-2 mb-3 h-8">
                   {project.description || 'No description added for this security target.'}
                 </p>
+
+                {/* Risk Score Progress Bar */}
+                <div className="space-y-1 mb-3">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                    <span>Overall Risk Score</span>
+                    <span className="font-bold text-slate-200">{project.risk_score ?? 0}/100</span>
+                  </div>
+                  <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        project.risk_level === 'CRITICAL' ? 'bg-rose-500' :
+                        project.risk_level === 'HIGH' ? 'bg-amber-500' :
+                        project.risk_level === 'MEDIUM' ? 'bg-yellow-500' :
+                        'bg-emerald-500'
+                      }`}
+                      style={{ width: `${Math.min(project.risk_score || 0, 100)}%` }}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="pt-3 border-t border-slate-800/80 space-y-2 text-xs">

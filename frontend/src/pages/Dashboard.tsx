@@ -49,10 +49,14 @@ export const Dashboard: React.FC = () => {
     return <LoadingSpinner label="Loading Zentronyx dashboard..." />;
   }
 
-  const scannedProjects = projects.filter((p) => (p.risk_score || 0) > 0);
+  const scannedProjects = projects.filter(
+    (p) => (p.status === 'SCANNED' || (p.risk_score !== undefined && p.risk_score !== null && p.risk_level !== 'UNKNOWN'))
+  );
   const avgRisk = scannedProjects.length > 0
     ? (scannedProjects.reduce((sum, p) => sum + (p.risk_score || 0), 0) / scannedProjects.length).toFixed(1)
-    : '0.0';
+    : (projects.length > 0
+      ? (projects.reduce((sum, p) => sum + (p.risk_score || 0), 0) / projects.length).toFixed(1)
+      : '0.0');
   const highRiskCount = projects.filter((p) => p.risk_level === 'CRITICAL' || p.risk_level === 'HIGH').length;
 
   return (
@@ -232,6 +236,9 @@ export const Dashboard: React.FC = () => {
                     <div className="text-xs text-slate-500 truncate max-w-xs">{p.description || 'No description provided.'}</div>
                   </div>
                   <div className="flex items-center space-x-3">
+                    <span className="text-xs font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                      Score: {p.risk_score ?? 0}
+                    </span>
                     <Badge riskLevel={p.risk_level} />
                     <span className="text-xs text-slate-500 font-mono">{formatDate(p.created_at)}</span>
                   </div>

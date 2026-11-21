@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -9,6 +9,7 @@ from app.repositories.project_repository import ProjectRepository
 from app.repositories.source_repository import SourceRepository
 from app.schemas.source import SourceResponse, GitHubIngestRequest
 from app.services.source.zip_provider import ZipSourceProvider
+from app.services.source.folder_provider import FolderSourceProvider
 from app.services.source.github_provider import GitHubSourceProvider
 from app.services.workspace_service import WorkspaceService
 
@@ -51,6 +52,32 @@ async def upload_zip_source(
     await verify_project_ownership(project_id, db, current_user)
     provider = ZipSourceProvider(db)
     source = await provider.acquire(project_id=project_id, upload_file=file)
+    return SourceResponse.model_validate(source)
+
+
+@router.post(
+    "/folder",
+    response_model=SourceResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload and ingest a folder of source files directly"
+)
+async def upload_folder_source(
+    project_id: str,
+    files: List[UploadFile] = File(...),
+    paths: Optional[List[str]] = Form(None),
+    folder_name: Optional[str] = Form("source_folder"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Uploads an unpacked folder directory of files, validates path traversal, and writes to workspace."""
+    await verify_project_ownership(project_id, db, current_user)
+    provider = FolderSourceProvider(db)
+    source = await provider.acquire(
+        project_id=project_id,
+        files=files,
+        paths=paths,
+        folder_name=folder_name
+    )
     return SourceResponse.model_validate(source)
 
 

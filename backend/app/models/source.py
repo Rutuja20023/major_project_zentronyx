@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 class SourceType(str, enum.Enum):
     ZIP = "ZIP"
     GITHUB = "GITHUB"
+    FOLDER = "FOLDER"
 
 
 class AcquisitionStatus(str, enum.Enum):

@@ -442,6 +442,7 @@ export const ComplianceReports: React.FC = () => {
                 <tr>
                   <th className="p-3.5">Target Project & Scan ID</th>
                   <th className="p-3.5">Compliance Posture</th>
+                  <th className="p-3.5">Overall Risk Score</th>
                   <th className="p-3.5">Findings Breakdown</th>
                   <th className="p-3.5">Execution Date</th>
                   <th className="p-3.5 text-right">Audit Downloads & Actions</th>
@@ -484,6 +485,32 @@ export const ComplianceReports: React.FC = () => {
                             <span>ACTION REQUIRED</span>
                           </div>
                         )}
+                      </td>
+
+                      <td className="p-3.5 font-mono">
+                        {(() => {
+                          const scanRisk = Math.min(100, Math.round((nCrit * 30 + nHigh * 15 + nMed * 5 + nLow * 1) * 100) / 100);
+                          const scanRiskLevel = scanRisk >= 75 ? 'CRITICAL' : scanRisk >= 50 ? 'HIGH' : scanRisk >= 25 ? 'MEDIUM' : 'LOW';
+                          return (
+                            <div className="flex items-center space-x-1.5">
+                              <span className="font-bold text-slate-100">{scanRisk}</span>
+                              <span className="text-[10px] text-slate-500 font-normal">/ 100</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                  scanRiskLevel === 'CRITICAL'
+                                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                                    : scanRiskLevel === 'HIGH'
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                    : scanRiskLevel === 'MEDIUM'
+                                    ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                }`}
+                              >
+                                {scanRiskLevel}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       <td className="p-3.5">

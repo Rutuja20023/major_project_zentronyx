@@ -40,6 +40,17 @@ tmp/
 *.zip
 *.tar.gz
 
+# Test sample binaries
+test_samples/
+test_vulnerable_app/
+
+# Large report/doc files
+*.docx
+BODMAS-gh-pages.zip
+Chapter7_Results_Content.md
+Implementation_Paper.md
+~$*
+
 # IDE & System
 .DS_Store
 Thumbs.db
