@@ -5,7 +5,6 @@ databases:
     plan: free
 
 services:
-  # ── Backend FastAPI Engine ─────────────────────────────────────────────────
   - type: web
     name: zentronyx-backend
     runtime: docker
@@ -21,7 +20,6 @@ services:
         fromDatabase:
           name: zentronyx-db
           property: connectionString
-        # Render gives a postgres:// URL — convert to asyncpg
       - key: SYNC_DATABASE_URL
         fromDatabase:
           name: zentronyx-db
@@ -39,19 +37,10 @@ services:
       - key: SCAN_TIMEOUT
         value: "300"
       - key: AI_SERVICE_URL
-        fromService:
-          name: zentronyx-ai-service
-          type: web
-          property: host
-          envVarKey: AI_SERVICE_URL
+        value: https://zentronyx-ai-service.onrender.com
       - key: CORS_ORIGINS
-        fromService:
-          name: zentronyx-frontend
-          type: web
-          property: host
-          envVarKey: FRONTEND_URL
+        value: '["https://zentronyx-frontend.onrender.com","http://localhost:3000"]'
 
-  # ── AI / GNN Microservice ──────────────────────────────────────────────────
   - type: web
     name: zentronyx-ai-service
     runtime: docker
@@ -62,7 +51,6 @@ services:
       - key: ENVIRONMENT
         value: production
 
-  # ── Frontend Static Site ───────────────────────────────────────────────────
   - type: web
     name: zentronyx-frontend
     runtime: static
@@ -75,8 +63,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          name: zentronyx-backend
-          type: web
-          property: host
-          envVarKey: BACKEND_URL
+        value: https://zentronyx-backend.onrender.com/api/v1
