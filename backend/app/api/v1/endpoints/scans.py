@@ -1,9 +1,11 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.models.user import User, UserRole
+from app.models.scan import FindingLifecycleStatus
 from app.security.dependencies import get_current_active_user
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.scan_repository import ScanRepository
@@ -16,6 +18,10 @@ from app.schemas.scan import (
 )
 
 router = APIRouter(tags=["Scan Orchestrator"])
+
+
+class TriageUpdateRequest(BaseModel):
+    status: FindingLifecycleStatus
 
 
 async def verify_project_ownership(project_id: str, db: AsyncSession, current_user: User):
@@ -163,3 +169,49 @@ async def get_scan_results(
     await verify_project_ownership(scan.project_id, db, current_user)
     results = await scan_repo.get_scan_results(scan_id, severity=severity, module_type=module_type)
     return [ScanResultResponse.model_validate(r) for r in results]
+
+
+@router.patch(
+    "/scans/{scan_id}/results/{result_id}/triage",
+    response_model=ScanResultResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Update finding triage status and recalculate project risk score"
+)
+async def triage_finding(
+    scan_id: str,
+    result_id: str,
+    payload: TriageUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Updates a finding's lifecycle status (OPEN/ACKNOWLEDGED/RESOLVED/FALSE_POSITIVE)
+    and recalculates the project risk score based only on active (non-resolved) findings."""
+    scan_repo = ScanRepository(db)
+    scan = await scan_repo.get_by_id(scan_id)
+    if not scan:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found")
+
+    await verify_project_ownership(scan.project_id, db, current_user)
+
+    result = await scan_repo.get_result_by_id(result_id)
+    if not result or result.scan_id != scan_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
+
+    # Update the finding status
+    updated = await scan_repo.update_result_status(result, payload.status.value)
+
+    # Recalculate project risk score using only OPEN + ACKNOWLEDGED findings
+    active_counts = await scan_repo.get_active_severity_summary(scan_id)
+    risk_counts = {k: v for k, v in active_counts.items() if k != "INFO"}
+
+    from app.core.risk_engine import RiskEngine
+    from app.repositories.project_repository import ProjectRepository
+    project_repo = ProjectRepository(db)
+    project = await project_repo.get_by_id(scan.project_id)
+    if project:
+        score, level, _ = RiskEngine.calculate_risk_score(risk_counts)
+        project.risk_score = score
+        project.risk_level = level
+        await db.commit()
+
+    return ScanResultResponse.model_validate(updated)

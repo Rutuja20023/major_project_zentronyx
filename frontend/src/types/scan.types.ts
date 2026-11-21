@@ -74,6 +74,8 @@ export interface ScanResult {
   rule_id: string;
   recommendation?: string;
   raw_metadata?: Record<string, any>;
+  status: string;  // FindingLifecycleStatus: OPEN | ACKNOWLEDGED | RESOLVED | FALSE_POSITIVE
+  fingerprint?: string;
   created_at: string;
 }
 

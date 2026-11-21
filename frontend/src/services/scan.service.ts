@@ -34,4 +34,11 @@ export const scanService = {
     const queryString = params.toString() ? `?${params.toString()}` : '';
     return apiFetch<ScanResult[]>(`/scans/${scanId}/results${queryString}`);
   },
+
+  async triageFinding(scanId: string, resultId: string, status: string): Promise<ScanResult> {
+    return apiFetch<ScanResult>(`/scans/${scanId}/results/${resultId}/triage`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
 };

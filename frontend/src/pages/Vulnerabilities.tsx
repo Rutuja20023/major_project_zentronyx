@@ -92,7 +92,7 @@ export const Vulnerabilities: React.FC = () => {
 
     const matchSev = selectedSeverity === 'ALL' || r.severity === selectedSeverity;
     const matchMod = selectedModule === 'ALL' || r.module_type === selectedModule;
-    const matchStat = selectedStatus === 'ALL' || (r.raw_metadata?.status || 'OPEN') === selectedStatus;
+    const matchStat = selectedStatus === 'ALL' || (r.status || 'OPEN') === selectedStatus;
 
     return matchSearch && matchSev && matchMod && matchStat;
   });
@@ -112,29 +112,23 @@ export const Vulnerabilities: React.FC = () => {
     currentRiskScore >= 50 ? 'HIGH' :
     currentRiskScore >= 25 ? 'MEDIUM' : 'LOW';
 
-  const handleUpdateFindingStatus = (findingId: string, newStatus: string) => {
-    setResults((prev) =>
-      prev.map((r) => {
-        if (r.id === findingId) {
-          return {
-            ...r,
-            raw_metadata: {
-              ...r.raw_metadata,
-              status: newStatus,
-            },
-          };
-        }
-        return r;
-      })
-    );
-    if (activeFinding && activeFinding.id === findingId) {
-      setActiveFinding({
-        ...activeFinding,
-        raw_metadata: {
-          ...activeFinding.raw_metadata,
-          status: newStatus,
-        },
-      });
+  const handleUpdateFindingStatus = async (findingId: string, newStatus: string) => {
+    const finding = results.find((r) => r.id === findingId);
+    if (!finding) return;
+
+    // Find which scan this finding belongs to
+    const scanId = finding.scan_id;
+    if (!scanId) return;
+
+    try {
+      const updated = await scanService.triageFinding(scanId, findingId, newStatus);
+      // Update local state with the real status from backend
+      setResults((prev) => prev.map((r) => r.id === findingId ? { ...r, status: updated.status, projectName: r.projectName } : r));
+      if (activeFinding && activeFinding.id === findingId) {
+        setActiveFinding({ ...activeFinding, status: updated.status });
+      }
+    } catch (err) {
+      console.error('Failed to update finding status:', err);
     }
   };
 
@@ -359,7 +353,7 @@ export const Vulnerabilities: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
                 {filtered.map((item) => {
-                  const itemStatus = item.raw_metadata?.status || 'OPEN';
+                  const itemStatus = item.status || 'OPEN';
 
                   return (
                     <tr

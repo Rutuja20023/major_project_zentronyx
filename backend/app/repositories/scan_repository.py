@@ -200,3 +200,26 @@ class ScanRepository:
 
         result = await self.db.execute(query.order_by(ScanResult.created_at.asc()))
         return list(result.scalars().all())
+
+    async def get_result_by_id(self, result_id: str) -> Optional[ScanResult]:
+        result = await self.db.execute(
+            select(ScanResult).where(ScanResult.id == result_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def update_result_status(self, result: ScanResult, new_status: str) -> ScanResult:
+        result.status = new_status
+        await self.db.commit()
+        await self.db.refresh(result)
+        return result
+
+    async def get_active_severity_summary(self, scan_id: str) -> Dict[str, int]:
+        """Counts only OPEN + ACKNOWLEDGED findings — excludes RESOLVED and FALSE_POSITIVE."""
+        counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
+        results = await self.get_scan_results(scan_id)
+        for r in results:
+            if r.status in ("OPEN", "ACKNOWLEDGED"):
+                sev = r.severity.upper() if isinstance(r.severity, str) else r.severity.value
+                if sev in counts:
+                    counts[sev] += 1
+        return counts
